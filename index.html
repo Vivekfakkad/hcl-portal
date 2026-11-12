@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HCL Technologies - Employee Self-Service Portal</title>
+  <style>
+    :root {
+      --hcl-blue: #005596;
+      --hcl-dark: #002b4e;
+      --hcl-accent: #00a3e0;
+      --bg-light: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --success-green: #16a34a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg-light); color: var(--text-main); line-height: 1.5; }
+
+    /* LOGIN SCREEN */
+    #login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--hcl-dark) 0%, var(--hcl-blue) 100%);
+      padding: 20px;
+    }
+    .login-card {
+      background: #fff;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 14px;
+      padding: 32px 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .hcl-brand {
+      font-size: 28px;
+      font-weight: 900;
+      color: var(--hcl-blue);
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .hcl-sub { font-size: 12px; color: var(--text-muted); margin-bottom: 24px; font-weight: 600; }
+    .input-group { text-align: left; margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 6px; }
+    .input-group input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 15px;
+      outline: none;
+      transition: 0.2s;
+    }
+    .input-group input:focus { border-color: var(--hcl-blue); }
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: var(--hcl-blue);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-login:hover { background: var(--hcl-dark); }
+    .otp-banner {
+      display: none;
+      background: #dcfce7;
+      color: #166534;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: 1px solid #86efac;
+    }
+
+    /* MAIN PORTAL */
+    #portal-app { display: none; padding-bottom: 40px; }
+
+    /* NAVBAR */
+    .navbar {
+      background: var(--hcl-dark);
+      color: #fff;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    }
+    .nav-left { display: flex; align-items: center; gap: 10px; }
+    .nav-logo { font-weight: 900; font-size: 20px; letter-spacing: 0.5px; color: #fff; }
+    .nav-badge { background: var(--hcl-accent); font-size: 10px; padding: 2px 7px; border-radius: 4px; font-weight: 700; }
+
+    /* THREE DOT MENU */
+    .menu-wrapper { position: relative; }
+    .three-dot-btn {
+      background: rgba(255,255,255,0.12);
+      border: none;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-size: 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .three-dot-btn:hover { background: rgba(255,255,255,0.25); }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: 46px;
+      background: #fff;
+      width: 260px;
+      border-radius: 12px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      z-index: 200;
+    }
+    .dropdown-menu.show { display: block; }
+    .dropdown-header {
+      background: #f8fafc;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .dropdown-item {
+      padding: 12px 16px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-main);
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: 0.15s;
+    }
+    .dropdown-item:hover, .dropdown-item.active { background: #eff6ff; color: var(--hcl-blue); }
+
+    /* CONTAINER & SECTIONS */
+    .container { max-width: 850px; margin: 18px auto; padding: 0 14px; }
+    .view-section { display: none; }
+    .view-section.active { display: block; animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid var(--border-color);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--hcl-dark);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* DIGITAL ID CARD */
+    .id-card-box {
+      max-width: 340px;
+      margin: 0 auto 20px auto;
+      background: #fff;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1.5px solid #cbd5e1;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .id-top-bar {
+      background: var(--hcl-dark);
+      color: #fff;
+      padding: 14px;
+      font-weight: 800;
+      font-size: 16px;
+      border-bottom: 4px solid var(--hcl-accent);
+    }
+    .id-photo-wrap {
+      margin-top: 18px;
+      display: flex;
+      justify-content: center;
+    }
+    .id-photo {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--hcl-blue);
+      background: #e2e8f0;
+    }
+    .id-name { font-size: 20px; font-weight: 800; color: var(--text-main); margin-top: 10px; }
+    .id-role { font-size: 13px; font-weight: 700; color: var(--hcl-blue); }
+    .id-dept { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 12px; }
+    .id-emp-box {
+      background: #f8fafc;
+      margin: 0 20px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px dashed #94a3b8;
+    }
+    .id-emp-label { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+    .id-emp-val { font-size: 18px; font-weight: 900; color: var(--hcl-dark); letter-spacing: 1px; }
+    .id-loc { font-size: 12px; color: var(--text-main); margin: 10px 0; font-weight: 600; }
+    .id-qr { width: 70px; height: 70px; margin: 4px auto; }
+    .id-footer { background: #f1f5f9; padding: 8px; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-top: 8px; }
+
+    /* INFO GRIDS & TABLES */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+    .info-item { background: #f8fafc; padding: 10px 12px; border-radius: 8px; border: 1px solid #e2e8f0; }
+    .info-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+    .info-val { font-size: 13.5px; font-weight: 700; color: var(--text-main); margin-top: 2px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+    th, td { padding: 10px 8px; border: 1px solid var(--border-color); text-align: left; }
+    th { background: #f1f5f9; font-weight: 700; color: var(--hcl-dark); }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .status-pill {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    /* SALARY SLIP CONTROLS */
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+      background: #eff6ff;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #bfdbfe;
+    }
+    .filter-bar select {
+      flex: 1;
+      min-width: 130px;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #93c5fd;
+      font-weight: 700;
+      font-size: 13.5px;
+      background: #fff;
+    }
+    .net-box {
+      background: var(--hcl-dark);
+      color: #fff;
+      padding: 14px 16px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+    }
+    .net-big { font-size: 20px; font-weight: 900; color: #38bdf8; }
+  </style>
+</head>
+<body>
+
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="hcl-brand">HCLTech</div>
+      <div class="hcl-sub">Employee Self-Service & Credential Portal</div>
+
+      <div id="otp-msg" class="otp-banner">
+        ✅ Verification OTP sent to registered mobile (+91-7049977213). Enter any 4-digit code to proceed.
+      </div>
+
+      <div id="step-1">
+        <div class="input-group">
+          <label>Employee ID or Registered Mobile Number</label>
+          <input type="text" id="login-id" value="E24084" placeholder="Enter E24084 or 7049977213">
+        </div>
+        <button type="button" class="btn-login" onclick="goToOtpStep()">Send Verification OTP</button>
+      </div>
+
+      <div id="step-2" style="display:none;">
+        <div class="input-group">
+          <label>Enter 4-Digit Verification OTP</label>
+          <input type="number" id="otp-box" placeholder="e.g. 1234" maxlength="4">
+        </div>
+        <button type="button" class="btn-login" onclick="completeLogin()">Verify OTP & Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MAIN PORTAL ================= -->
+  <div id="portal-app">
+    <!-- Top Bar with Three-Dot Menu -->
+    <div class="navbar">
+      <div class="nav-left">
+        <span class="nav-logo">HCLTech</span>
+        <span class="nav-badge">ESS PORTAL</span>
+      </div>
+
+      <div class="menu-wrapper">
+        <button class="three-dot-btn" onclick="toggleMenu()" title="More Options">⋮</button>
+        <div class="dropdown-menu" id="three-dot-dropdown">
+          <div class="dropdown-header">Employee Services Menu</div>
+          <div class="dropdown-item active" onclick="switchTab('tab-profile', this)">👤 Profile & Digital ID</div>
+          <div class="dropdown-item" onclick="switchTab('tab-payslip', this)">📄 Monthly Salary Slips</div>
+          <div class="dropdown-item" onclick="switchTab('tab-register', this)">📊 7-Month Payroll Register</div>
+          <div class="dropdown-item" onclick="switchTab('tab-attendance', this)">📅 Working Days & Attendance</div>
+          <div class="dropdown-item" onclick="switchTab('tab-leaves', this)">🌴 Leave Balance & Records</div>
+          <div class="dropdown-item" onclick="switchTab('tab-tax', this)">🏦 Tax, EPF & Bank Details</div>
+          <div class="dropdown-item" onclick="switchTab('tab-family', this)">👨‍👩‍👦 Family & Mediclaim (GMIP)</div>
+          <div class="dropdown-item" onclick="switchTab('tab-company', this)">🏢 Company & Branch Details</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- 1. PROFILE & DIGITAL ID CARD -->
+      <div id="tab-profile" class="view-section active">
+        <div class="id-card-box">
+          <div class="id-top-bar">HCL Technologies Ltd</div>
+          <div class="id-photo-wrap">
+            <!-- Embedded Profile Avatar / Photo -->
+            <img id="emp-photo" class="id-photo" alt="Vivek Parashar">
+          </div>
+          <div class="id-name">Vivek Parashar</div>
+          <div class="id-role">Junior Developer</div>
+          <div class="id-dept">TECHNOLOGY & SERVICES</div>
+
+          <div class="id-emp-box">
+            <div class="id-emp-label">EMPLOYEE ID</div>
+            <div class="id-emp-val">E24084</div>
+          </div>
+
+          <div class="id-loc">Indore, New Palasia, Madhya Pradesh</div>
+          <img class="id-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=HCL-EMP-E24084-VIVEK-PARASHAR" alt="QR">
+          <div style="font-size:9px; font-weight:700; color:#64748b;">SCAN TO VERIFY DIGITAL ID</div>
+          <div class="id-footer">STATUS: ACTIVE EMPLOYEE • JOINED: 08 APR 2026</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>Official Employment Details</span>
+            <span class="status-pill">VERIFIED</span>
+          </div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Organization</div><div class="info-val">HCL Technologies Limited</div></div>
+            <div class="info-item"><div class="info-label">Employee Code</div><div class="info-val">E24084</div></div>
+            <div class="info-item"><div class="info-label">Date of Joining</div><div class="info-val">08 April 2026</div></div>
+            <div class="info-item"><div class="info-label">Annual Base CTC</div><div class="info-val">₹6,00,000/- per annum</div></div>
+            <div class="info-item"><div class="info-label">Monthly Gross (Branch)</div><div class="info-val">₹64,200/-</div></div>
+            <div class="info-item"><div class="info-label">Net In-Hand (Regular)</div><div class="info-val">₹58,000/-</div></div>
+            <div class="info-item"><div class="info-label">Registered Mobile</div><div class="info-val">+91-7049977213</div></div>
+            <div class="info-item"><div class="info-label">Corporate / Personal Email</div><div class="info-val">vivekparashar33@gmail.com</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Company & Corporate Credentials</div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Corporate HQ</div><div class="info-val">Plot No. 3A, Sector 126, Noida - 201301, U.P.</div></div>
+            <div class="info-item"><div class="info-label">Corporate CIN & GST</div><div class="info-val">CIN: L74140DL1991PLC046369 | GST: 09AAACH0997L1ZX</div></div>
+            <div class="info-item"><div class="info-label">Indore Duty Station</div><div class="info-val">New Palasia, Near Lok Plaza, Opp. C21 Mall, Indore - 452001</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SALARY SLIPS (WITH MONTH & YEAR SELECTOR) -->
+      <div id="tab-payslip" class="view-section">
+        <div class="card">
+          <div class="card-title">Download / View Official Salary Slip</div>
+          
+          <div class="filter-bar">
+            <select id="slip-month" onchange="updatePayslip()">
+              <option value="apr">April</option>
+              <option value="may">May</option>
+              <option value="jun" selected>June</option>
+              <option value="jul">July</option>
+              <option value="aug">August</option>
+              <option value="sep">September</option>
+              <option value="oct">October</option>
+            </select>
+            <select id="slip-year" onchange="updatePayslip()">
+              <option value="2026" selected>2026</option>
+            </select>
+          </div>
+
+          <div id="payslip-content"></div>
+        </div>
+      </div>
+
+      <!-- 3. 7-MONTH PAYROLL REGISTER -->
+      <div id="tab-register" class="view-section">
+        <div class="card">
+          <div class="card-title">Consolidated 7-Month Salary Register (Apr – Oct 2026)</div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pay Period</th>
+                  <th>Days</th>
+                  <th class="num">Gross (₹)</th>
+                  <th class="num">EPF (₹)</th>
+                  <th class="num">PT (₹)</th>
+                  <th class="num">Net Pay (₹)</th>
+                  <th>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>April 2026</td><td>23/30</td><td class="num">46,000</td><td class="num">4,600</td><td class="num">200</td><td class="num"><strong>41,200</strong></td><td>Joined 08 Apr (Pro-rated)</td></tr>
+                <tr><td>May 2026</td><td>31/31</td><td class="num">63,000</td><td class="num">6,000</td><td class="num">200</td><td class="num"><strong>56,800</strong></td><td>Regular Full Month</td></tr>
+                <tr><td>June 2026</td><td>30/30</td><td class="num">64,200</td><td class="num">6,000</td><td class="num">200</td><td class="num"><strong>58,000</strong></td><td>Standard Full Month</td></tr>
+                <tr><td>July 2026</td><td>31/31</td><td class="num">64,200</td><td class="num">6,000</td><td class="num">200</td><td class="num"><strong>58,000</strong></td><td>Standard Full Month</td></tr>
+                <tr><td>August 2026</td><td>0/31</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num"><strong>0</strong></td><td>Provision / Leave of Absence</td></tr>
+                <tr><td>September 2026</td><td>28/30</td><td class="num">60,200</td><td class="num">5,600</td><td class="num">200</td><td class="num"><strong>54,400</strong></td><td>2 Unpaid Leaves (LOP)</td></tr>
+                <tr><td>October 2026</td><td>31/31</td><td class="num">64,200</td><td class="num">6,000</td><td class="num">200</td><td class="num"><strong>58,000</strong></td><td>Standard Full Month</td></tr>
+                <tr style="background:#eff6ff; font-weight:800;">
+                  <td>TOTAL</td><td>174 Days</td><td class="num">₹3,61,800</td><td class="num">₹34,200</td><td class="num">₹1,200</td><td class="num">₹3,26,400</td><td>FY 2026-27 Cumulative</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. WORKING DAYS & ATTENDANCE -->
+      <div id="tab-attendance" class="view-section">
+        <div class="card">
+          <div class="card-title">Attendance & Working Days Summary (2026)</div>
+          <div class="info-grid" style="margin-bottom:14px;">
+            <div class="info-item"><div class="info-label">Total Payable Days</div><div class="info-val">174 Days</div></div>
+            <div class="info-item"><div class="info-label">Shift & Work Week</div><div class="info-val">09:30 AM – 06:30 PM (Mon–Fri)</div></div>
+            <div class="info-item"><div class="info-label">Work Mode</div><div class="info-val">Hybrid / Indore Branch</div></div>
+          </div>
+          <table>
+            <thead>
+              <tr><th>Month</th><th>Total Days</th><th>Payable Days</th><th>LOP / Absence</th><th>Attendance Status</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>April 2026</td><td>30</td><td>23</td><td>7 (Pre-Joining)</td><td>Joined on 08 April 2026</td></tr>
+              <tr><td>May 2026</td><td>31</td><td>31</td><td>0</td><td>100% Present</td></tr>
+              <tr><td>June 2026</td><td>30</td><td>30</td><td>0</td><td>100% Present</td></tr>
+              <tr><td>July 2026</td><td>31</td><td>31</td><td>0</td><td>100% Present</td></tr>
+              <tr><td>August 2026</td><td>31</td><td>0</td><td>31</td><td>Approved Provision Period</td></tr>
+              <tr><td>September 2026</td><td>30</td><td>28</td><td>2</td><td>2 Days Loss of Pay (LOP)</td></tr>
+              <tr><td>October 2026</td><td>31</td><td>31</td><td>0</td><td>100% Present</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. LEAVE BALANCE & RECORDS -->
+      <div id="tab-leaves" class="view-section">
+        <div class="card">
+          <div class="card-title">Leave Quota & Balance (FY 2026-27)</div>
+          <div class="info-grid" style="margin-bottom:14px;">
+            <div class="info-item"><div class="info-label">Privilege / Earned Leave (EL)</div><div class="info-val">9.0 Days Available</div></div>
+            <div class="info-item"><div class="info-label">Casual Leave (CL)</div><div class="info-val">4.0 Days Available</div></div>
+            <div class="info-item"><div class="info-label">Sick Leave (SL)</div><div class="info-val">5.0 Days Available</div></div>
+          </div>
+          <table>
+            <thead><tr><th>Leave Period</th><th>Type</th><th>Days</th><th>Approval Status</th></tr></thead>
+            <tbody>
+              <tr><td>01 Aug – 31 Aug 2026</td><td>Administrative Provision Leave</td><td>31</td><td><span class="status-pill">Approved</span></td></tr>
+              <tr><td>14 Sep – 15 Sep 2026</td><td>Loss of Pay (Unpaid Leave)</td><td>2</td><td><span class="status-pill">Processed</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 6. TAX, EPF & BANK DETAILS -->
+      <div id="tab-tax" class="view-section">
+        <div class="card">
+          <div class="card-title">Statutory Tax, EPF & Bank Account Details</div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">PAN Card Number</div><div class="info-val">EQWPP0539R</div></div>
+            <div class="info-item"><div class="info-label">Salary Bank Account</div><div class="info-val">43369658439</div></div>
+            <div class="info-item"><div class="info-label">Tax Regime Opted</div><div class="info-val">New Tax Regime (Section 87A)</div></div>
+            <div class="info-item"><div class="info-label">TDS Deducted YTD</div><div class="info-val">₹0.00 (Exempt Slab)</div></div>
+            <div class="info-item"><div class="info-label">Employee EPF Contribution</div><div class="info-val">₹34,200.00 (12% of Basic)</div></div>
+            <div class="info-item"><div class="info-label">Employer Matching EPF</div><div class="info-val">₹34,200.00 (12% Matched)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. FAMILY & MEDICLAIM DIRECTORY -->
+      <div id="tab-family" class="view-section">
+        <div class="card">
+          <div class="card-title">Family & Dependent Directory (GMIP Covered)</div>
+          <table>
+            <thead><tr><th>Relationship</th><th>Full Name</th><th>Nominee / Insurance Status</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Father</strong></td><td>Ravi Parashar</td><td>Primary Parent Dependent</td></tr>
+              <tr><td><strong>Mother</strong></td><td>Radha Parashar</td><td>Primary Parent Dependent</td></tr>
+              <tr><td><strong>Spouse / Wife</strong></td><td>Shradha Avasthi</td><td>Married (2022) • Primary Nominee</td></tr>
+              <tr><td><strong>Child</strong></td><td>1 Son</td><td>Dependent Minor Child</td></tr>
+              <tr><td><strong>Brother</strong></td><td>Aman Parashar</td><td>Immediate Family Relation</td></tr>
+            </tbody>
+          </table>
+          <div class="info-grid" style="margin-top:14px;">
+            <div class="info-item"><div class="info-label">Blood Group</div><div class="info-val">B+ (Positive)</div></div>
+            <div class="info-item"><div class="info-label">Height / Weight</div><div class="info-val">5'8" (172 cm) / 74 kg</div></div>
+            <div class="info-item"><div class="info-label">Permanent Home Address</div><div class="info-val">271, Soni Mohalla, Birpur, Dist. Sheopur, M.P. - 476335</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. COMPANY & BRANCH DETAILS -->
+      <div id="tab-company" class="view-section">
+        <div class="card">
+          <div class="card-title">HCL Technologies Limited — Corporate & Regional Info</div>
+          <div class="info-grid">
+            <div class="info-item"><div class="info-label">Registered Entity</div><div class="info-val">HCL Technologies Limited</div></div>
+            <div class="info-item"><div class="info-label">Corporate Identification (CIN)</div><div class="info-val">L74140DL1991PLC046369</div></div>
+            <div class="info-item"><div class="info-label">GSTIN</div><div class="info-val">09AAACH0997L1ZX</div></div>
+            <div class="info-item"><div class="info-label">Corporate Headquarters</div><div class="info-val">Plot No. 3A, Sector 126, Noida - 201301, Uttar Pradesh</div></div>
+            <div class="info-item"><div class="info-label">Indore Regional Office</div><div class="info-val">New Palasia, Near Lok Plaza, In Front of C21 Mall, Indore, M.P. - 452001</div></div>
+            <div class="info-item"><div class="info-label">Official Support</div><div class="info-val">www.hcltech.com | payroll@hcltech.com</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Profile SVG Avatar (Clean executive look, replaceable with any photo URL)
+    const PROFILE_AVATAR = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><rect width='200' height='200' fill='%23dbeafe'/><circle cx='100' cy='75' r='36' fill='%231e3a8a'/><path d='M35 185 C35 135, 165 135, 165 185 Z' fill='%230f172a'/><polygon points='100,135 90,155 100,175 110,155' fill='%23ffffff'/></svg>";
+    document.getElementById('emp-photo').src = PROFILE_AVATAR;
+
+    // 1. OTP LOGIN LOGIC (Accepts any 4-digit code without getting stuck)
+    function goToOtpStep() {
+      const idVal = document.getElementById('login-id').value.trim();
+      if (!idVal) {
+        alert("Please enter Employee ID (E24084) or Mobile Number");
+        return;
+      }
+      document.getElementById('otp-msg').style.display = 'block';
+      document.getElementById('step-1').style.display = 'none';
+      document.getElementById('step-2').style.display = 'block';
+      document.getElementById('otp-box').focus();
+    }
+
+    function completeLogin() {
+      const otpVal = document.getElementById('otp-box').value.trim();
+      if (otpVal.length < 4) {
+        alert("Please enter any 4-digit OTP (e.g., 1234)");
+        return;
+      }
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('portal-app').style.display = 'block';
+      updatePayslip();
+    }
+
+    // 2. THREE-DOT DROPDOWN MENU
+    function toggleMenu() {
+      document.getElementById('three-dot-dropdown').classList.toggle('show');
+    }
+
+    window.onclick = function(event) {
+      if (!event.target.matches('.three-dot-btn')) {
+        const dropdown = document.getElementById('three-dot-dropdown');
+        if (dropdown && dropdown.classList.contains('show')) {
+          dropdown.classList.remove('show');
+        }
+      }
+    };
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      document.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('three-dot-dropdown').classList.remove('show');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 3. SALARY SLIP DATA (APRIL - OCTOBER 2026)
+    const PAYSLIPS = {
+      apr: {
+        title: "April 2026 (Pro-rated Joining)", ref: "HCL/PAY/2026/04/E24084/001", date: "10 May 2026",
+        days: "23 / 30 (Joined 08 Apr)", basic: "38,333.00", hra: "4,600.00", special: "3,067.00", travel: "0.00",
+        gross: "46,000.00", pf: "4,600.00", pt: "200.00", deduct: "4,800.00", net: "41,200.00",
+        words: "Forty One Thousand Two Hundred Rupees Only"
+      },
+      may: {
+        title: "May 2026", ref: "HCL/PAY/2026/05/E24084/002", date: "05 Jun 2026",
+        days: "31 / 31", basic: "50,000.00", hra: "6,000.00", special: "4,000.00", travel: "3,000.00",
+        gross: "63,000.00", pf: "6,000.00", pt: "200.00", deduct: "6,200.00", net: "56,800.00",
+        words: "Fifty Six Thousand Eight Hundred Rupees Only"
+      },
+      jun: {
+        title: "June 2026", ref: "HCL/PAY/2026/06/E24084/003", date: "05 Jul 2026",
+        days: "30 / 30", basic: "50,000.00", hra: "6,000.00", special: "4,000.00", travel: "4,200.00",
+        gross: "64,200.00", pf: "6,000.00", pt: "200.00", deduct: "6,200.00", net: "58,000.00",
+        words: "Fifty Eight Thousand Rupees Only"
+      },
+      jul: {
+        title: "July 2026", ref: "HCL/PAY/2026/07/E24084/004", date: "05 Aug 2026",
+        days: "31 / 31", basic: "50,000.00", hra: "6,000.00", special: "4,000.00", travel: "4,200.00",
+        gross: "64,200.00", pf: "6,000.00", pt: "200.00", deduct: "6,200.00", net: "58,000.00",
+        words: "Fifty Eight Thousand Rupees Only"
+      },
+      aug: {
+        title: "August 2026 (Provision / Leave of Absence)", ref: "HCL/PAY/2026/08/E24084/005", date: "05 Sep 2026",
+        days: "0 / 31 (Provision Period)", basic: "0.00", hra: "0.00", special: "0.00", travel: "0.00",
+        gross: "0.00", pf: "0.00", pt: "0.00", deduct: "0.00", net: "0.00",
+        words: "Zero Rupees Only (Administrative Provision Cycle)"
+      },
+      sep: {
+        title: "September 2026 (2 Unpaid Leaves)", ref: "HCL/PAY/2026/09/E24084/006", date: "05 Oct 2026",
+        days: "28 / 30 (2 Days LOP)", basic: "46,667.00", hra: "5,600.00", special: "3,733.00", travel: "4,200.00",
+        gross: "60,200.00", pf: "5,600.00", pt: "200.00", deduct: "5,800.00", net: "54,400.00",
+        words: "Fifty Four Thousand Four Hundred Rupees Only"
+      },
+      oct: {
+        title: "October 2026", ref: "HCL/PAY/2026/10/E24084/007", date: "05 Nov 2026",
+        days: "31 / 31", basic: "50,000.00", hra: "6,000.00", special: "4,000.00", travel: "4,200.00",
+        gross: "64,200.00", pf: "6,000.00", pt: "200.00", deduct: "6,200.00", net: "58,000.00",
+        words: "Fifty Eight Thousand Rupees Only"
+      }
+    };
+
+    function updatePayslip() {
+      const m = document.getElementById('slip-month').value;
+      const d = PAYSLIPS[m];
+      document.getElementById('payslip-content').innerHTML = `
+        <div style="border:1.5px solid #cbd5e1; border-radius:10px; padding:16px; background:#fff;">
+          <div style="display:flex; justify-content:space-between; border-bottom:2px solid #005596; padding-bottom:10px; margin-bottom:12px;">
+            <div>
+              <div style="font-size:18px; font-weight:900; color:#005596;">HCL Technologies Limited</div>
+              <div style="font-size:10.5px; color:#64748b;">CIN: L74140DL1991PLC046369 | Plot No. 3A, Sec-126, Noida</div>
+            </div>
+            <div style="text-align:right; font-size:11px;">
+              <strong>Ref: ${d.ref}</strong><br>Generated: ${d.date}
+            </div>
+          </div>
+
+          <div style="background:#f1f5f9; padding:7px; text-align:center; font-weight:800; font-size:13px; color:#002b4e; margin-bottom:10px;">
+            SALARY SLIP — ${d.title.toUpperCase()}
+          </div>
+
+          <table>
+            <tr><th>Employee Name</th><td>Vivek Parashar</td><th>Bank A/C</th><td>43369658439</td></tr>
+            <tr><th>Employee ID</th><td>E24084</td><th>PAN</th><td>EQWPP0539R</td></tr>
+            <tr><th>Designation</th><td>Junior Developer</td><th>Days Worked</th><td><strong>${d.days}</strong></td></tr>
+          </table>
+
+          <table style="margin-top:12px;">
+            <thead>
+              <tr><th>Earnings Head</th><th class="num">Amount (₹)</th><th>Deductions Head</th><th class="num">Amount (₹)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Basic Salary</td><td class="num">${d.basic}</td><td>Provident Fund (EPF 12%)</td><td class="num">${d.pf}</td></tr>
+              <tr><td>House Rent Allowance (HRA)</td><td class="num">${d.hra}</td><td>Professional Tax (MP)</td><td class="num">${d.pt}</td></tr>
+              <tr><td>Special Allowance</td><td class="num">${d.special}</td><td>Income Tax (TDS)</td><td class="num">0.00</td></tr>
+              <tr><td>Travel Reimbursement</td><td class="num">${d.travel}</td><td>Other Recovery</td><td class="num">0.00</td></tr>
+              <tr style="background:#f8fafc; font-weight:800;">
+                <td>Gross Earnings</td><td class="num">₹${d.gross}</td><td>Total Deductions</td><td class="num">₹${d.deduct}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="net-box">
+            <div>
+              <div style="font-size:10px; opacity:0.8;">NET TAKE-HOME PAYABLE</div>
+              <div style="font-size:11.5px; font-weight:600;">${d.words}</div>
+            </div>
+            <div class="net-big">₹${d.net}</div>
+          </div>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
